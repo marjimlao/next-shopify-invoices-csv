@@ -87,7 +87,7 @@ export default function Csv() {
     const reader = new FileReader();
 
     reader.onloadend = async ({ target }) => {
-      const jsonArray = await csv().fromString(target?.result ?? '');
+      const jsonArray = await csv().fromString(target?.result?.toString() ?? '');
 
       const result: Array<Order> = [];
 
