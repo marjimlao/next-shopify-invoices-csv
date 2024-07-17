@@ -6,6 +6,8 @@
 
 Genera facturas en PDF para tu tienda online Shopify a partir del CSV de pedidos.
 
+Puedes utilizarlo online desde este enlace: [Generador de facturas Shopify](https://next-shopify-invoices-csv.vercel.app/)
+
 </div>
 
 <details>
