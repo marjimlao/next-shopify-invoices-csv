@@ -246,12 +246,12 @@ export default function Csv() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start p-24">
-      <h1 className='text-3xl mb-8'>Generar facturas Shopify desde CSV</h1>
+    <main className="flex min-h-screen flex-col items-center justify-start p-8 md:p-24">
+      <h1 className='text-3xl mb-8 text-center'>Generar facturas Shopify desde CSV</h1>
 
       {form &&
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3">
             <div className='flex flex-col items-center gap-4 w-full'>
               <strong className='text-xl'>Datos empresa</strong>
 
@@ -259,7 +259,7 @@ export default function Csv() {
                 control={form.control}
                 name="logo"
                 render={({ field }) => (
-                  <FormItem className='w-3/4'>
+                  <FormItem className='w-full xl:w-3/4'>
                     <FormControl>
                       <Input className='w-full' type="text" placeholder="URL logo" {...field} />
                     </FormControl>
@@ -272,7 +272,7 @@ export default function Csv() {
                 control={form.control}
                 name="businessName"
                 render={({ field }) => (
-                  <FormItem className='w-3/4'>
+                  <FormItem className='w-full xl:w-3/4'>
                     <FormControl>
                       <Input className='w-full' type="text" placeholder="Nombre empresa" {...field} />
                     </FormControl>
@@ -285,7 +285,7 @@ export default function Csv() {
                 control={form.control}
                 name="businessID"
                 render={({ field }) => (
-                  <FormItem className='w-3/4'>
+                  <FormItem className='w-full xl:w-3/4'>
                     <FormControl>
                       <Input className='w-full' type="text" placeholder="ID Empresa" {...field} />
                     </FormControl>
@@ -298,7 +298,7 @@ export default function Csv() {
                 control={form.control}
                 name="businessAddress"
                 render={({ field }) => (
-                  <FormItem className='w-3/4'>
+                  <FormItem className='w-full xl:w-3/4'>
                     <FormControl>
                       <Input className='w-full' type="text" placeholder="Dirección empresa" {...field} />
                     </FormControl>
