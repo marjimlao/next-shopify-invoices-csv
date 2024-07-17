@@ -246,7 +246,8 @@ export default function Csv() {
       setOrders(result);
     };
 
-    reader.readAsText(data.csv);
+    if (data.csv)
+      reader.readAsText(data.csv);
   }
 
   return (
