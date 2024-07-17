@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<a name="readme-top"></a>
 
-## Getting Started
+<div align="center">
 
-First, run the development server:
+## Generador de facturas para Shopify desde CSV
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Genera facturas en PDF para tu tienda online Shopify a partir del CSV de pedidos.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+</div>
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<details>
+<summary>Tabla de contenidos</summary>
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- [Generador de facturas para Shopify desde CSV](#generador-de-facturas-para-shopify-desde-csv)
+- [Para empezar](#para-empezar)
+  - [Prerequisitos](#prerequisitos)
+  - [Instalación](#instalación)
+- [🛠️ Stack](#️-stack)
 
-## Learn More
+</details>
 
-To learn more about Next.js, take a look at the following resources:
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Para empezar
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Prerequisitos
 
-## Deploy on Vercel
+- NVM (recomendado para asegurar versión de Node) ver [documentación oficial](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+  ```sh
+  nvm use
+  # o
+  nvm use <version>
+  ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+  > Si quieres automatizar el proceso, puedes crear un script siguiendo la [documentación oficial](https://github.com/nvm-sh/nvm?tab=readme-ov-file#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
+
+<details>
+	<summary>Pequeño script de automatización</summary>
+	
+- En Linux/MacOS:
+	```sh
+	# .bashrc | .zshrc | cualquier archivo de configuración
+	# pequeño script para cambiar de version al entrar al directorio
+	cd() {
+  builtin cd "$@"
+		if [[ -f .nvmrc ]]; then
+			nvm use > /dev/null
+			# Si quieres que te diga la versión
+			nvm use
+		fi
+	}
+	```
+
+- En Windows:
+
+  ```powershell
+  # $PROFILE
+  function Change-Node-Version {
+  	param($path)
+  	& Set-Location $path
+  	$pwd = pwd
+  	if ( Test-Path "$pwd\\.nvmrc" ) {
+  		$version = Get-Content .nvmrc
+  		nvm use $version
+  	}
+  }
+  New-Alias -Name cd -Value Change-Node-Version -Force -Option AllScope
+  ```
+
+  </details>
+
+- NPM
+
+  ```sh
+  npm install npm@latest -g
+  ```
+
+### Instalación
+
+1. Clona el repositorio
+
+   ```sh
+   git clone https://github.com/marjimlao/next-shopify-invoices-csv.git
+   ```
+
+2. Instala los paquetes de NPM
+
+   ```sh
+   npm install
+   ```
+
+3. Ejecuta el proyecto
+   ```sh
+   npm run dev
+   ```
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+
+## 🛠️ Stack
+
+- [![NextJS][next-badge]][next-url] - The React Framework for the Web.
+- [![Typescript][typescript-badge]][typescript-url] - JavaScript with syntax for types.
+- [![Tailwind CSS][tailwind-badge]][tailwind-url] - A utility-first CSS framework for rapidly building custom designs.
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+
+[next-url]: https://nextjs.org/
+[typescript-url]: https://www.typescriptlang.org/
+[tailwind-url]: https://tailwindcss.com/
+[next-badge]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
+[typescript-badge]: https://img.shields.io/badge/Typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white&color=blue
+[tailwind-badge]: https://img.shields.io/badge/Tailwind-ffffff?style=for-the-badge&logo=tailwindcss&logoColor=38bdf8
