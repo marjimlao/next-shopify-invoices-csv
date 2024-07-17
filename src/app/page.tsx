@@ -24,14 +24,18 @@ import { Input } from "@/components/ui/input"
 import { Order } from '@/lib/definitions';
 
 const FormSchema = z.object({
-  logo: z.string(),
-  businessName: z.string(),
-  businessID: z.string(),
-  businessAddress: z.string(),
+  logo: z.string().url(),
+  businessName: z.string().min(1),
+  businessID: z.string().min(1),
+  businessAddress: z.string().min(1),
   prefix: z.string().optional(),
   number: z.coerce.number().min(1),
   suffix: z.string().optional(),
-  csv: z.any()
+  csv: z.instanceof(File)
+    .optional()
+    .refine((file) => {
+      return file;
+    }, 'File is required.')
 })
 
 export default function Csv() {
@@ -248,6 +252,10 @@ export default function Csv() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-8 md:p-24">
       <h1 className='text-3xl mb-8 text-center'>Generar facturas Shopify desde CSV</h1>
+
+      <p className='text-md text-slate-400 text-center mb-2'>Obten el archivo CSV de pedidos desde tu <a className='text-blue-600 underline' href="https://admin.shopify.com/" title="Acceso panel Shopify" target="_blank">panel de Shopify</a>, sección "Pedidos". Haz clic en la opción "Exportar", selecciona los pedidos para los que quieres generar las facturas y elige la opción "Archivo CSV simple". Por último haz clic en el botón "Exportar pedidos".</p>
+      <p className='text-md text-slate-400 text-center mb-2'>Una vez tengas el archivo CSV, adjúntalo en este formulario e indica el número de factura que debe tener el primer pedido que has exportado.</p>
+      <p className='text-md text-slate-400 text-center mb-8'>Indica también la URL al logo que incluirá la factura, así como tus datos de facturación (nombre de la empresa, NIF y dirección) que se incluirán en el pie de las facturas.</p>
 
       {form &&
         <Form {...form}>
