@@ -1,113 +1,382 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import csv from 'csvtojson';
+import moment from 'moment';
+
+import Invoices from '@/components/invoices'
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+
+import { Button } from "@/components/ui/button"
+
+import { Input } from "@/components/ui/input"
+
+import { Order } from '@/lib/definitions';
+
+const FormSchema = z.object({
+  logo: z.string(),
+  businessName: z.string(),
+  businessID: z.string(),
+  businessAddress: z.string(),
+  prefix: z.string().optional(),
+  number: z.coerce.number().min(1),
+  suffix: z.string().optional(),
+  csv: z.any()
+})
+
+export default function Csv() {
+  const [logo, setLogo] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [businessID, setBusinessID] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [orders, setOrders] = useState<Array<Order>>([]);
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      logo,
+      businessName,
+      businessID,
+      businessAddress,
+      prefix: '',
+      number: 1,
+      suffix: '',
+    },
+  })
+
+  useEffect(() => {
+    const logo = localStorage.getItem('logo') || '';
+    const businessName = localStorage.getItem('businessName') || '';
+    const businessID = localStorage.getItem('businessID') || '';
+    const businessAddress = localStorage.getItem('businessAddress') || '';
+
+    form.setValue('logo', logo);
+    form.setValue('businessName', businessName);
+    form.setValue('businessID', businessID);
+    form.setValue('businessAddress', businessAddress);
+
+    setLogo(logo);
+    setBusinessName(businessName);
+    setBusinessID(businessID);
+    setBusinessAddress(businessAddress);
+  }, []);
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setOrders([]);
+
+    setLogo(data.logo);
+    setBusinessName(data.businessName);
+    setBusinessID(data.businessID);
+    setBusinessAddress(data.businessAddress);
+
+    localStorage.setItem('logo', data.logo);
+    localStorage.setItem('businessName', data.businessName);
+    localStorage.setItem('businessID', data.businessID);
+    localStorage.setItem('businessAddress', data.businessAddress);
+
+    const reader = new FileReader();
+
+    reader.onloadend = async ({ target }) => {
+      const jsonArray = await csv().fromString(target?.result ?? '');
+
+      const result: Array<Order> = [];
+
+      let invoice: Order = {
+        header: {
+          number: '',
+          date: '',
+          shippingInfo: {
+            name: '',
+            nif: '',
+            address: '',
+            address2: '',
+            zip: '',
+            city: '',
+            province: '',
+            phone: '',
+            email: '',
+          },
+          billingInfo: {
+            name: '',
+            nif: '',
+            address: '',
+            address2: '',
+            zip: '',
+            city: '',
+            province: '',
+            phone: '',
+            email: '',
+          }
+        },
+        lines: [],
+        totals: {
+          taxes: '',
+          discount: '',
+          shipping: '',
+          subtotal: '',
+          total: '',
+        },
+        name: ''
+      };
+
+      let previousOrder: any;
+
+      for (let index = jsonArray.length - 1; index >= 0; index--) {
+        const r = jsonArray[index];
+
+        if (previousOrder === r.Name) {
+          invoice.lines.push(
+            {
+              title: r['Lineitem name'],
+              quantity: r['Lineitem quantity'],
+              price: r['Lineitem price'],
+            }
+          );
+
+          invoice.header.shippingInfo = {
+            name: r['Shipping Name'],
+            nif: r['Shipping Company'],
+            address: r['Shipping Address1'],
+            address2: r['Shipping Address2'],
+            zip: r['Shipping Zip'],
+            city: r['Shipping City'],
+            province: r['Shipping Province Name'],
+            phone: r['Shipping Phone'],
+            email: r['Email'],
+          };
+
+          invoice.header.billingInfo = {
+            name: r['Billing Name'],
+            nif: r['Shipping Company'],
+            address: r['Billing Address1'],
+            address2: r['Billing Address2'],
+            zip: r['Billing Zip'],
+            city: r['Billing City'],
+            province: r['Billing Province Name'],
+            phone: r['Billing Phone'],
+            email: r['Email'],
+          };
+
+          let subtotalLines = 0;
+          invoice.lines.map(l => {
+            subtotalLines += +l.price * +l.quantity
+          });
+
+          invoice.totals = {
+            taxes: r.Taxes,
+            // discount: r['Discount Amount'],
+            discount: (subtotalLines - +r.Subtotal).toFixed(2),
+            shipping: r.Shipping,
+            subtotal: r.Subtotal,
+            total: r.Total
+          };
+        } else {
+          if (previousOrder) {
+            result.push(invoice);
+          }
+
+          // console.log('currentnumber', currentNumber);
+          previousOrder = r.Name;
+
+          invoice = {
+            name: r['Name'],
+            header: {
+              number: (data.prefix ?? '') + data.number + (data.suffix ?? ''),
+              date: moment(r['Created at'], 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm:ss'),
+              shippingInfo: {
+                name: r['Shipping Name'],
+                nif: r['Shipping Company'],
+                address: r['Shipping Address1'],
+                address2: r['Shipping Address2'],
+                zip: r['Shipping Zip'],
+                city: r['Shipping City'],
+                province: r['Shipping Province Name'],
+                phone: r['Shipping Phone'],
+                email: r['Email'],
+              },
+              billingInfo: {
+                name: r['Billing Name'],
+                nif: r['Shipping Company'],
+                address: r['Billing Address1'],
+                address2: r['Billing Address2'],
+                zip: r['Billing Zip'],
+                city: r['Billing City'],
+                province: r['Billing Province Name'],
+                phone: r['Billing Phone'],
+                email: r['Email'],
+              }
+            },
+            lines: [
+              {
+                title: r['Lineitem name'],
+                quantity: +r['Lineitem quantity'],
+                price: r['Lineitem price'],
+              }
+            ],
+            totals: {
+              taxes: r.Taxes,
+              // discount: r['Discount Amount'],
+              discount: ((+r['Lineitem price'] * +r['Lineitem quantity']) - +r.Subtotal).toFixed(2),
+              shipping: r.Shipping,
+              subtotal: r.Subtotal,
+              total: r.Total
+            }
+          }
+
+          data.number = data.number + 1;
+        }
+      }
+
+      result.push(invoice);
+
+      setOrders(result);
+    };
+
+    reader.readAsText(data.csv);
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <main className="flex min-h-screen flex-col items-center justify-start p-24">
+      <h1 className='text-3xl mb-8'>Generar facturas Shopify desde CSV</h1>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      {form &&
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+            <div className='flex flex-col items-center gap-4 w-full'>
+              <strong className='text-xl'>Datos empresa</strong>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+              <FormField
+                control={form.control}
+                name="logo"
+                render={({ field }) => (
+                  <FormItem className='w-3/4'>
+                    <FormControl>
+                      <Input className='w-full' type="text" placeholder="URL logo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+              <FormField
+                control={form.control}
+                name="businessName"
+                render={({ field }) => (
+                  <FormItem className='w-3/4'>
+                    <FormControl>
+                      <Input className='w-full' type="text" placeholder="Nombre empresa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+              <FormField
+                control={form.control}
+                name="businessID"
+                render={({ field }) => (
+                  <FormItem className='w-3/4'>
+                    <FormControl>
+                      <Input className='w-full' type="text" placeholder="ID Empresa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+              <FormField
+                control={form.control}
+                name="businessAddress"
+                render={({ field }) => (
+                  <FormItem className='w-3/4'>
+                    <FormControl>
+                      <Input className='w-full' type="text" placeholder="Dirección empresa" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <strong className='text-xl'>Próximo número de factura</strong>
+
+              <div className="flex flex-row items-start justify-center gap-1">
+                <FormField
+                  control={form.control}
+                  name="prefix"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input className='w-20' type="text" placeholder="Prefijo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input className='w-32' type="number" placeholder="Número" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="suffix"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input className='w-20' type="text" placeholder="Sufijo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <strong className='text-xl'>Archivo</strong>
+
+              <FormField
+                control={form.control}
+                name="csv"
+                render={({ field: { value, onChange, ...fieldProps } }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input className='w-full dark:file:text-foreground' type="file" accept="text/csv"
+                        onChange={(event) =>
+                          onChange(event.target.files && event.target.files[0])
+                        } placeholder="Archivo CSV" {...fieldProps} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit">Generar</Button>
+            </div>
+          </form>
+        </Form>
+      }
+
+      {orders.length > 0 && logo && businessName && businessID && businessAddress &&
+        <Invoices logo={logo} businessName={businessName} businessID={businessID} businessAddress={businessAddress} orders={orders} />
+      }
     </main>
   );
 }
