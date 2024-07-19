@@ -76,7 +76,7 @@ export default function Csv() {
     form.setValue('businessName', newBusinessName);
     form.setValue('businessID', newBusinessID);
     form.setValue('businessAddress', newBusinessAddress);
-  }, [form])
+  }, [])
 
   // Manejamos el envío del formulario
   async function onSubmit(data: z.infer<typeof FormSchema>) {
