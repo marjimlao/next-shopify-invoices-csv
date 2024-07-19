@@ -23,14 +23,15 @@ import { Input } from "@/components/ui/input"
 
 import { Order } from '@/lib/definitions';
 
+// Definimos el schema del formulario
 const FormSchema = z.object({
   logo: z.string().url(),
   businessName: z.string().min(1),
   businessID: z.string().min(1),
   businessAddress: z.string().min(1),
-  prefix: z.string().optional(),
+  prefix: z.string(),
   number: z.coerce.number().min(1),
-  suffix: z.string().optional(),
+  suffix: z.string(),
   csv: z.instanceof(File)
     .optional()
     .refine((file) => {
@@ -39,12 +40,14 @@ const FormSchema = z.object({
 })
 
 export default function Csv() {
-  const [logo, setLogo] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [businessID, setBusinessID] = useState('');
-  const [businessAddress, setBusinessAddress] = useState('');
+  // Definimos variables que necesitaremos para renderizar las facturas.
+  const [logo, setLogo] = useState(() => localStorage.getItem('logo') || '');
+  const [businessName, setBusinessName] = useState(localStorage.getItem('businessName') || '');
+  const [businessID, setBusinessID] = useState(localStorage.getItem('businessID') || '');
+  const [businessAddress, setBusinessAddress] = useState(localStorage.getItem('businessAddress') || '');
   const [orders, setOrders] = useState<Array<Order>>([]);
 
+  // Inicializamos el formulario
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -58,36 +61,24 @@ export default function Csv() {
     },
   })
 
-  useEffect(() => {
-    const logo = localStorage.getItem('logo') || '';
-    const businessName = localStorage.getItem('businessName') || '';
-    const businessID = localStorage.getItem('businessID') || '';
-    const businessAddress = localStorage.getItem('businessAddress') || '';
-
-    form.setValue('logo', logo);
-    form.setValue('businessName', businessName);
-    form.setValue('businessID', businessID);
-    form.setValue('businessAddress', businessAddress);
-
-    setLogo(logo);
-    setBusinessName(businessName);
-    setBusinessID(businessID);
-    setBusinessAddress(businessAddress);
-  }, []);
-
+  // Manejamos el envío del formulario
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    // Limpiamos las facturas
     setOrders([]);
 
+    // Asignamos valor a las variables
     setLogo(data.logo);
     setBusinessName(data.businessName);
     setBusinessID(data.businessID);
     setBusinessAddress(data.businessAddress);
 
+    // Actualizamos valores de localstorage
     localStorage.setItem('logo', data.logo);
     localStorage.setItem('businessName', data.businessName);
     localStorage.setItem('businessID', data.businessID);
     localStorage.setItem('businessAddress', data.businessAddress);
 
+    // Procesamos el CSV
     const reader = new FileReader();
 
     reader.onloadend = async ({ target }) => {
@@ -135,6 +126,7 @@ export default function Csv() {
 
       let previousOrder: any;
 
+      // Parseamos los pedidos
       for (let index = jsonArray.length - 1; index >= 0; index--) {
         const r = jsonArray[index];
 
