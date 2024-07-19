@@ -41,10 +41,10 @@ const FormSchema = z.object({
 
 export default function Csv() {
   // Definimos variables que necesitaremos para renderizar las facturas.
-  const [logo, setLogo] = useState(() => localStorage.getItem('logo') || '');
-  const [businessName, setBusinessName] = useState(localStorage.getItem('businessName') || '');
-  const [businessID, setBusinessID] = useState(localStorage.getItem('businessID') || '');
-  const [businessAddress, setBusinessAddress] = useState(localStorage.getItem('businessAddress') || '');
+  const [logo, setLogo] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('logo') || '') : '');
+  const [businessName, setBusinessName] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('businessName') || '') : '');
+  const [businessID, setBusinessID] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('businessID') || '') : '');
+  const [businessAddress, setBusinessAddress] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('businessAddress') || '') : '');
   const [orders, setOrders] = useState<Array<Order>>([]);
 
   // Inicializamos el formulario
