@@ -41,10 +41,10 @@ const FormSchema = z.object({
 
 export default function Csv() {
   // Definimos variables que necesitaremos para renderizar las facturas.
-  const [logo, setLogo] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('logo') || '') : '');
-  const [businessName, setBusinessName] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('businessName') || '') : '');
-  const [businessID, setBusinessID] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('businessID') || '') : '');
-  const [businessAddress, setBusinessAddress] = useState(() => typeof window !== "undefined" ? (localStorage.getItem('businessAddress') || '') : '');
+  const [logo, setLogo] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [businessID, setBusinessID] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
   const [orders, setOrders] = useState<Array<Order>>([]);
 
   // Inicializamos el formulario
@@ -60,6 +60,23 @@ export default function Csv() {
       suffix: '',
     },
   })
+
+  useEffect(() => {
+    const newLogo = localStorage.getItem('logo') || '';
+    const newBusinessName = localStorage.getItem('businessName') || '';
+    const newBusinessID = localStorage.getItem('businessID') || '';
+    const newBusinessAddress = localStorage.getItem('businessAddress') || '';
+
+    setLogo(newLogo);
+    setBusinessName(newBusinessName);
+    setBusinessID(newBusinessID);
+    setBusinessAddress(newBusinessAddress);
+
+    form.setValue('logo', newLogo);
+    form.setValue('businessName', newBusinessName);
+    form.setValue('businessID', newBusinessID);
+    form.setValue('businessAddress', newBusinessAddress);
+  }, [form])
 
   // Manejamos el envío del formulario
   async function onSubmit(data: z.infer<typeof FormSchema>) {
